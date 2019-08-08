@@ -63,7 +63,7 @@ class Collector{
     void CollectConesCFSD19();
     void GetCompleteFrameCFSD19();
     void ProcessFrameCFSD19(cv::Mat& img, bool goRight);
-    void ShowResult(cv::Mat& img, std::vector<Cone>& blue, std::vector<Cone>& yellow, std::vector<Cone>& orange);
+    void ShowResult(cv::Mat& img, std::vector<Cone>& blue, std::vector<Cone>& yellow, std::vector<Cone>& orange, std::vector<Cone>& bigOrange);
     
   public:
     std::queue<Cone> m_currentConeFrame;

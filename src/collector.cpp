@@ -278,7 +278,8 @@ void Collector::ProcessFrameCFSD19(cv::Mat& img, bool goRight) {
     //Copy cones of different colors to their own containers for processing
     std::vector<Cone> tempYellowCones;
     std::vector<Cone> tempBlueCones;
-    std::vector<Cone> tempOrangeCones;     
+    std::vector<Cone> tempOrangeCones;
+    std::vector<Cone> tempBigOrangeCones;
     
     while(m_currentConeFrame.size() >0) {
         Cone cone = m_currentConeFrame.front();
@@ -295,6 +296,10 @@ void Collector::ProcessFrameCFSD19(cv::Mat& img, bool goRight) {
                 tempOrangeCones.push_back(cone);
                 if (m_verbose) std::cout << "an orange cone " << std::endl;
                 break;
+            case 3: // big orange
+                tempBigOrangeCones.push_back(cone);
+                if (m_verbose) std::cout << "a big orange cone " << std::endl;
+                break;
         }
         // Done copying, delete pointers to free memory
         m_currentConeFrame.pop();
@@ -304,6 +309,7 @@ void Collector::ProcessFrameCFSD19(cv::Mat& img, bool goRight) {
                   << "\n    yellow " << tempYellowCones.size()
                   << "\n      blue " << tempBlueCones.size()
                   << "\n    orange " << tempOrangeCones.size()
+                  << "\nbig orange " << tempBigOrangeCones.size()
                   << std::endl;
 
     /* coordinate from perception:
@@ -313,7 +319,7 @@ void Collector::ProcessFrameCFSD19(cv::Mat& img, bool goRight) {
     // Sort cones in an increasing order based on cone discance (i.e. x value)
     std::sort(tempYellowCones.begin(), tempYellowCones.end(), compareCone);
     std::sort(tempBlueCones.begin(), tempBlueCones.end(), compareCone);
-    std::sort(tempOrangeCones.begin(), tempOrangeCones.end(), compareCone);
+    // std::sort(tempOrangeCones.begin(), tempOrangeCones.end(), compareCone);
 
     // ShowResult(img, tempBlueCones, tempYellowCones, tempOrangeCones);
 
@@ -342,10 +348,10 @@ void Collector::ProcessFrameCFSD19(cv::Mat& img, bool goRight) {
         }
     }
 
-    ShowResult(img, tempBlueCones, tempYellowCones, tempOrangeCones);
+    ShowResult(img, tempBlueCones, tempYellowCones, tempOrangeCones, tempBigOrangeCones);
 }
 
-void Collector::ShowResult(cv::Mat& img, std::vector<Cone>& blue, std::vector<Cone>& yellow, std::vector<Cone>& orange) {
+void Collector::ShowResult(cv::Mat& img, std::vector<Cone>& blue, std::vector<Cone>& yellow, std::vector<Cone>& orange, std::vector<Cone>& bigOrange) {
     uint32_t n;
     double curPosX = 0, curPosY = 0;
     {
@@ -454,7 +460,28 @@ void Collector::ShowResult(cv::Mat& img, std::vector<Cone>& blue, std::vector<Co
             double yy = a * cos(m_theta) + b * sin(m_theta);
             int xxt = int(xx * resultResize + outWidth/2);
             int yyt = outHeight - int(yy*resultResize) - heightOffset;
-            cv::circle(out2D, cv::Point(xxt, yyt), 3, cv::Scalar(255,0,0), -1);
+            cv::circle(out2D, cv::Point(xxt, yyt), 3, cv::Scalar(0,69,255), -1);
+        }
+    }
+
+    if (bigOrange.size()) {
+        for (uint32_t i = 0; i < bigOrange.size(); i++) {
+            double x = -bigOrange[i].m_y;
+            double z = bigOrange[i].m_x; 
+            int xt = int(m_f * x / z + m_cx);
+            int yt = int(m_f * y / z + m_cy);
+            int pointSize = int(60/z);
+            if (xt-pointSize >= 0 && xt+pointSize <= 1280 && yt-pointSize >= 0 && yt+pointSize <= 720)
+                cv::circle(out3D, cv::Point(xt,yt), pointSize, cv::Scalar(0,165,255), -1);
+
+            double a = bigOrange[i].m_x * cos(m_heading) - bigOrange[i].m_y * sin(m_heading) + curPosX;
+            double b = bigOrange[i].m_x * sin(m_heading) + bigOrange[i].m_y * cos(m_theta) + curPosY;
+            double xx = a * sin(m_theta) - b * cos(m_theta);
+            double yy = a * cos(m_theta) + b * sin(m_theta);
+            int xxt = int(xx * resultResize + outWidth/2);
+            int yyt = outHeight - int(yy*resultResize) - heightOffset;
+            cv::circle(out2D, cv::Point(xxt, yyt), 3, cv::Scalar(0,165,255), -1);
+            cv::circle(out2D, cv::Point(xxt, yyt), 1, cv::Scalar(255,255,255), -1);
         }
     }
 
