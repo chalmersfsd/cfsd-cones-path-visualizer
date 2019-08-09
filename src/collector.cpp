@@ -265,6 +265,21 @@ void Collector::getWgs84Reading(cluon::data::Envelope envelope) {
     }
 }
 
+void Collector::getGroundSpeedReading(cluon::data::Envelope envelope) {
+    std::lock_guard<std::mutex> lock(speedMutex);
+    auto msg = cluon::extractMessage<opendlv::proxy::GroundSpeedReading>(std::move(envelope));
+    float speed = msg.groundSpeed();
+    int senderStamp = envelope.senderStamp();
+    if (senderStamp == 112)
+        m_gpsSpeed = speed;
+    else if (senderStamp == 113)
+        m_ekfSpeed = speed;
+    else if (senderStamp == 3000)
+        m_wheelEncoderSpeed = speed;
+    if (m_verbose)
+        std::cout << "Speed " << speed << " m/s" << std::endl;
+}
+
 void Collector::ProcessFrameCFSD19(cv::Mat& img, bool goRight) {
     // Todo: filter cones here
     if (!m_currentConeFrame.size()) {
@@ -508,6 +523,13 @@ void Collector::ShowResult(cv::Mat& img, std::vector<Cone>& blue, std::vector<Co
             if (xt-3 >= 0 && xt+3 <= 1280 && yt-3 >= 0 && yt+3 <= 720)
                 cv::circle(out3D, cv::Point(xt,yt), 3, cv::Scalar(69,255,69), -1);
         }
+    }
+    
+    {
+        std::lock_guard<std::mutex> lock(speedMutex);
+        cv::putText(out3D, "  GPS speed: "+std::to_string(m_gpsSpeed)+" m/s", cv::Point(4, 20), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255,255,255), 1);
+        cv::putText(out3D, "  EKF speed: "+std::to_string(m_ekfSpeed)+" m/s", cv::Point(4, 40), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255,255,255), 1);
+        cv::putText(out3D, "Wheel speed: "+std::to_string(m_wheelEncoderSpeed)+" m/s", cv::Point(4, 60), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(255,255,255), 1);
     }
     cv::imshow("reprojected cones", out3D);
     

@@ -92,6 +92,7 @@ class Collector{
     void getAimpoint(cluon::data::Envelope envelope);
     void getLocalPath(cluon::data::Envelope envelope);
     void getWgs84Reading(cluon::data::Envelope envelope);
+    void getGroundSpeedReading(cluon::data::Envelope envelope);
     
     std::mutex aimpointMutex{};
     std::array<double, 2> m_currentAim{};
@@ -110,6 +111,11 @@ class Collector{
 
     double m_theta{0};
     double m_heading{0};
+
+    std::mutex speedMutex{};
+    float m_gpsSpeed{0};
+    float m_ekfSpeed{0};
+    float m_wheelEncoderSpeed{0};
 
     // camera intrinsics
     double m_f{699.783};

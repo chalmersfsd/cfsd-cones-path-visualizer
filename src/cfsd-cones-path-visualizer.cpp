@@ -61,6 +61,10 @@ int32_t main(int32_t argc, char **argv) {
       collector.getWgs84Reading(envelope);
     }};
 
+    auto onGroundSpeedReading{[&collector](cluon::data::Envelope &&envelope) {
+      collector.getGroundSpeedReading(envelope);
+    }};
+
     od4.dataTrigger(opendlv::logic::perception::ObjectFrameStart::ID(), onObjectFrameStart);
     od4.dataTrigger(opendlv::logic::perception::ObjectFrameEnd::ID(), onObjectFrameEnd);
     od4.dataTrigger(opendlv::logic::perception::ObjectType::ID(), onObjectType);
@@ -68,7 +72,8 @@ int32_t main(int32_t argc, char **argv) {
     od4.dataTrigger(opendlv::logic::sensation::Equilibrioception::ID(), onEquilibrioception);
     od4.dataTrigger(opendlv::logic::action::AimPoint::ID(), onAimpoint);
     od4.dataTrigger(opendlv::logic::action::LocalPath::ID(), onLocalPath);
-    od4.dataTrigger(opendlv::proxy::GeodeticWgs84Reading::ID(), onGeodeticWgs84Reading);
+    od4.dataTrigger(opendlv::proxy::GroundSpeedReading::ID(), onGeodeticWgs84Reading);
+    od4.dataTrigger(opendlv::proxy::GeodeticWgs84Reading::ID(), onGroundSpeedReading);
 
     if (commandlineArguments.count("skidpad") != 0)
       collector.setSkidpadCones(commandlineArguments["mapfile"]);
